@@ -1,10 +1,81 @@
-import torch 
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.nn as nn 
-import tqdm
-import matplotlib.pyplot as plt 
-import numpy as np
+
+
+
+
+# LSTM
+
+<center> lesi chen </center>
+
+
+
+基于char-RNN的唐诗生成，数据集来自网上，下载链接附在代码中。
+
+
+
+首先在data.py中预处理jason格式的唐诗，并且按照七言和五言分成不同的数据类别储存。在每句诗的前后添加'<START' 以及 '<END' 表示诗句的开始和结束。
+
+
+
+```python
+
+#保存唐诗
+data7 = []
+data5 = []
+for i in tqdm.tqdm(range(20)):
+    path = "./json/poet.tang." + str(i*1000) + ".json"
+    with open("./json/poet.song.0.json","rb") as f:
+        jsondata = json.loads(f.read())
+        for poetry in jsondata:
+            p = poetry.get("paragraphs")
+            for s in p:
+                if s == "":
+                    continue
+                ss = re.split('。',s)
+                for w in ss:
+                    if len(w) == 15 and w[7] == '，':
+                        data7.append(list(w))
+                    elif len(w) == 11 and w[5] == '，':
+                        data5.append(list(w))
+
+def vec2poem(s,ix2word):
+    ns = ""
+    for x in s:
+        if x != "</s>" and x != "<END>" and x != "<STRAT>":
+            ns = ns + ix2word[x]
+    return ns 
+
+def processData(data,path):
+    words = {_word for _sentence in data for _word in _sentence}
+    word2ix = {_word: _ix for _ix, _word in enumerate(words)}
+    word2ix['<END>'] = len(word2ix)  
+    word2ix['<START>'] = len(word2ix)  
+    word2ix['</s>'] = len(word2ix) 
+    ix2word = {_ix: _word for _word, _ix in list(word2ix.items())}
+
+    for i in range(len(data)):
+        data[i] = ["<START>"] + data[i] + ["<END>"]
+
+    data = [[word2ix[_word] for _word in _sentence] for _sentence in data]
+
+    print(len(data))
+    print(vec2poem(data[2],ix2word))
+    print(vec2poem(data[3],ix2word))
+
+    np.save(path + "data.npy", data)   
+    np.save(path + "ix2word.npy", ix2word)   
+    np.save(path + "word2ix.npy", word2ix)   
+
+processData(data7, "./datasets/tang7/")
+processData(data5, "./datasets/tang5/")
+```
+
+
+
+利用Embedding和LSTM定义诗歌生成模型并训练。
+
+
+
+```python
 
 # REF: https://github.com/chenyuntc/pytorch-book/blob/master/chapter09-neural_poet_RNN/model.py
 
@@ -107,6 +178,51 @@ def main(training):
 
 if __name__ == "__main__":
     main(training=True)
-               
+```
 
-                
+
+
+生成藏头诗的结果如下所示，
+
+
+
+**平**生榮事爲先'生，一曲金魚是我非
+
+**安**得故人長葉影，石雲深處水清東
+
+**復**山高水鎖烟微，風雨前僧到中行
+
+**旦**來高齋出遊才，不知才看道有家
+
+
+
+**平**生初望最知在，一念閒名信不尊
+
+**安**開別墅偏天子，還見萬途偏自分
+
+**復**山花雨暮烟霞，一徑春高別有聲
+
+**旦**來南國歸難字，白髮新客在人間
+
+
+
+**平**生榮遇更誰如，竊位妨賢四紀餘
+
+**安**得故人頻會面，一罇相對共醺酣
+
+**復**嶺春多多病詔，聯鑣萬名最如依
+
+**旦**山烟月酒臨河，萬種新霞照紫老
+
+
+
+**平**生心氣在，終在靜邊塵
+
+**安**民即是道，投足皆爲家
+
+**復**川尋北知，風日照孤綸
+
+**旦**英共攀折，芳歲幾推移
+
+
+
