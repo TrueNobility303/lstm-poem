@@ -39,13 +39,3 @@ A Tang poem for PingAnFuDan(or Fudan Daily）is generated.
 * report.md report.pdf 报告
 
 
-## 结果展示
-
-
-**平**生初望最知在，一念閒名信不尊
-
-**安**開別墅偏天子，還見萬途偏自分
-
-**復**山花雨暮烟霞，一徑春高別有聲
-
-**旦**來南國歸難字，白髮新客在人間
